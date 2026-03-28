@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<div class="container my-5">
+    <h2 class="mb-4 fw-bold text-center">🛒 Your Cart</h2>
+
+    <div class="row">
+        
+        <!-- Cart Items Section -->
+        <div class="col-md-8">
+
+            {% for item in cart_items %}
+            <div class="card mb-3 shadow-sm border-0 rounded-4">
+                <div class="row g-0 align-items-center">
+
+                    <!-- Food Image -->
+                    <div class="col-md-3 text-center p-2">
+                        <img src="{{ item.Food_item.Food_image.url}}" 
+                             class="img-fluid rounded-3"
+                             style="height:120px; object-fit:cover;">
+                    </div>
+
+                    <!-- Food Details -->
+                    <div class="col-md-6">
+                        <div class="card-body">
+                            <h5 class="card-title fw-bold">
+                                {{ item.Food_item.name }}
+                            </h5>
+                            <p class="text-muted mb-1">
+                                ₹ {{ item.Food_item.price }}
+                            </p>
+
+                            <!-- Quantity -->
+                            <p class="mb-0">
+                                Quantity: 
+                                <span class="badge bg-dark">
+                                    {{ item.quantity }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Remove Button -->
+                    <div class="col-md-3 text-center">
+                        <a href="{% url 'remove_from_cart' item.id %}" 
+                           class="btn btn-danger btn-sm rounded-pill">
+                           Remove
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+            {% empty %}
+            <div class="alert alert-info text-center">
+                Your cart is empty 😔
+            </div>
+            {% endfor %}
+
+        </div>
+
+        <!-- Order Summary Section -->
+        <div class="col-md-4">
+            <div class="card shadow-lg border-0 rounded-4 p-4">
+                <h4 class="fw-bold mb-3">Order Summary</h4>
+
+                <hr>
+
+                <div class="d-flex justify-content-between">
+                    <span>Subtotal</span>
+                    <span>₹ {{ total }}</span>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <span>Delivery Fee</span>
+                    <span>₹ 40</span>
+                </div>
+
+                <hr>
+
+                <div class="d-flex justify-content-between fw-bold fs-5">
+                    <span>Total</span>
+                    <span>₹ {{ total|add:40 }}</span>
+                </div>
+
+                <a href="/payment/" 
+                   class="btn btn-dark w-100 mt-4 rounded-pill">
+                   Checkout Payments
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

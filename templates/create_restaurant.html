@@ -1,0 +1,11 @@
+<form method="POST">
+    {% csrf_token %}
+    
+    <input type="text" name="name" placeholder="Restaurant Name" required>
+    <textarea name="address" placeholder="Address" required></textarea>
+    
+    <input type="text" name="lat" placeholder="Latitude" required>
+    <input type="text" name="lon" placeholder="Longitude" required>
+
+    <button type="submit">Create Restaurant</button>
+</form>

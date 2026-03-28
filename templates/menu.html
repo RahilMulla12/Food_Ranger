@@ -1,0 +1,393 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+  :root {
+    --bg:      #0f0e0c;
+    --surface: #1a1814;
+    --card:    #221f1a;
+    --border:  #2e2a23;
+    --gold:    #d4a847;
+    --gold-dim:#8a6b28;
+    --text:    #f0ead8;
+    --muted:   #7a7060;
+    --green:   #4caf7d;
+    --red:     #e05c5c;
+  }
+
+  body { background: var(--bg) !important; color: var(--text) !important; }
+
+  /* ── PAGE TITLE ── */
+  .page-title {
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: .35rem;
+  }
+  .page-title span { color: var(--gold); }
+  .page-subtitle {
+    text-align: center;
+    color: var(--muted);
+    font-size: .9rem;
+    margin-bottom: 1.5rem;
+  }
+
+  /* ── LOCATION BANNER ── */
+  .loc-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: .75rem;
+    padding: .9rem 1.25rem;
+    border-radius: 12px;
+    margin-bottom: 1.75rem;
+    font-size: .875rem;
+  }
+  .loc-banner.detected {
+    background: rgba(76,175,125,.08);
+    border: 1px solid rgba(76,175,125,.25);
+    color: var(--green);
+  }
+  .loc-banner.not-detected {
+    background: rgba(212,168,71,.07);
+    border: 1px solid var(--gold-dim);
+    color: var(--gold);
+  }
+  .loc-banner a {
+    font-weight: 600;
+    color: inherit;
+    text-decoration: underline;
+  }
+  .loc-coords {
+    font-size: .78rem;
+    color: var(--muted);
+  }
+
+  /* ── SEARCH BAR ── */
+  .search-wrap {
+    max-width: 500px;
+    margin: 0 auto 2.5rem;
+    position: relative;
+  }
+  .search-wrap input {
+    width: 100%;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    color: var(--text);
+    padding: .7rem 1.2rem .7rem 2.8rem;
+    font-size: .9rem;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .search-wrap input:focus { border-color: var(--gold); }
+  .search-wrap input::placeholder { color: var(--muted); }
+  .search-wrap .search-icon {
+    position: absolute;
+    left: 1rem; top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: 1rem;
+  }
+
+  /* ── RESTAURANT BLOCK ── */
+  .restaurant-block {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    margin-bottom: 2rem;
+    overflow: hidden;
+    transition: border-color .25s;
+  }
+  .restaurant-block:hover { border-color: var(--gold-dim); }
+
+  .restaurant-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: .75rem;
+  }
+
+  .res-name {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 .2rem;
+  }
+  .res-address { color: var(--muted); font-size: .82rem; }
+
+  .res-meta {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    flex-wrap: wrap;
+  }
+
+  .badge-open {
+    padding: .35rem .9rem;
+    border-radius: 999px;
+    font-size: .75rem;
+    font-weight: 600;
+  }
+  .badge-open.open   { background: rgba(76,175,125,.15); color: var(--green); border: 1px solid rgba(76,175,125,.3); }
+  .badge-open.closed { background: rgba(224,92,92,.12);  color: var(--red);   border: 1px solid rgba(224,92,92,.3); }
+
+  .badge-distance {
+    padding: .35rem .9rem;
+    border-radius: 999px;
+    font-size: .75rem;
+    font-weight: 600;
+    background: rgba(212,168,71,.1);
+    color: var(--gold);
+    border: 1px solid var(--gold-dim);
+  }
+
+  /* ── CATEGORY TABS ── */
+  .cat-tabs {
+    display: flex;
+    gap: .6rem;
+    padding: .9rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .cat-tabs::-webkit-scrollbar { display: none; }
+
+  .cat-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 999px;
+    padding: .3rem .9rem;
+    font-size: .78rem;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .cat-btn:hover, .cat-btn.active {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: #0f0e0c;
+  }
+
+  /* ── FOOD CARDS SCROLL ── */
+  .food-scroll {
+    display: flex;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .food-scroll::-webkit-scrollbar { height: 4px; }
+  .food-scroll::-webkit-scrollbar-track { background: transparent; }
+  .food-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  /* ── FOOD CARD ── */
+  .food-card {
+    min-width: 220px;
+    max-width: 220px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    transition: border-color .25s, transform .2s;
+    flex-shrink: 0;
+  }
+  .food-card:hover { border-color: var(--gold-dim); transform: translateY(-3px); }
+
+  .food-img { width: 100%; height: 150px; object-fit: cover; }
+  .food-img-placeholder {
+    width: 100%; height: 150px;
+    background: var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+  }
+
+  .food-body { padding: .9rem 1rem 1rem; }
+  .food-name {
+    font-weight: 600;
+    font-size: .95rem;
+    color: var(--text);
+    margin-bottom: .25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .food-price {
+    color: var(--gold);
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: .75rem;
+  }
+  .food-actions { display: flex; gap: .5rem; }
+
+  .btn-buy {
+    flex: 1;
+    background: var(--gold);
+    color: #0f0e0c;
+    border: none;
+    border-radius: 999px;
+    padding: .4rem .6rem;
+    font-size: .78rem;
+    font-weight: 700;
+    text-align: center;
+    text-decoration: none;
+    transition: filter .2s;
+  }
+  .btn-buy:hover { filter: brightness(1.1); color: #0f0e0c; }
+
+  .btn-cart {
+    flex: 1;
+    background: transparent;
+    border: 1px solid var(--gold-dim);
+    color: var(--gold);
+    border-radius: 999px;
+    padding: .4rem .6rem;
+    font-size: .78rem;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    transition: background .2s;
+  }
+  .btn-cart:hover { background: rgba(212,168,71,.1); color: var(--gold); }
+
+  /* ── EMPTY STATES ── */
+  .empty-food { color: var(--muted); font-size: .875rem; padding: 1.5rem; }
+  .empty-page {
+    text-align: center;
+    color: var(--muted);
+    padding: 4rem 1rem;
+    font-size: 1rem;
+  }
+  .empty-page .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+</style>
+
+<div class="container py-4">
+
+  <!-- ── TITLE ── -->
+  <h2 class="page-title">Restaurants <span>&</span> Dishes</h2>
+  <p class="page-subtitle">Discover food near you</p>
+
+  <!-- ── LOCATION BANNER ── -->
+  {% if location_detected %}
+    <div class="loc-banner detected">
+      <span>📍 Location detected — showing restaurants within 10 km</span>
+      <span class="loc-coords">
+        Lat: {{ user_lat|floatformat:4 }} &nbsp;|&nbsp; Lon: {{ user_lon|floatformat:4 }}
+        &nbsp;·&nbsp;
+        <a href="{% url 'current_location' %}">Update location</a>
+      </span>
+    </div>
+  {% else %}
+    <div class="loc-banner not-detected">
+      <span>📍 Location not detected — showing all restaurants</span>
+      <a href="{% url 'current_location' %}">Detect my location →</a>
+    </div>
+  {% endif %}
+
+  <!-- ── SEARCH ── -->
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="Search restaurants or dishes...">
+  </div>
+
+  <!-- ── RESTAURANT LIST ── -->
+  {% for restaurant in restaurants %}
+  <div class="restaurant-block" data-restaurant="{{ restaurant.name|lower }}">
+
+    <!-- Header -->
+    <div class="restaurant-header">
+      <div>
+        <h5 class="res-name">{{ restaurant.name }}</h5>
+        <span class="res-address">📍 {{ restaurant.address }}</span>
+      </div>
+
+      <div class="res-meta">
+        {% if restaurant.distance %}
+          <span class="badge-distance">📏 {{ restaurant.distance }} km away</span>
+        {% endif %}
+        {% if restaurant.is_open %}
+          <span class="badge-open open">🟢 Open</span>
+        {% else %}
+          <span class="badge-open closed">🔴 Closed</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Category Tabs -->
+    <div class="cat-tabs">
+      <button class="cat-btn active">All</button>
+      <button class="cat-btn">Biryani</button>
+      <button class="cat-btn">Pizza</button>
+      <button class="cat-btn">South Indian</button>
+      <button class="cat-btn">Desserts</button>
+      <button class="cat-btn">Drinks</button>
+    </div>
+
+    <!-- Food Cards -->
+    <div class="food-scroll">
+      {% for item in restaurant.food_items.all %}
+        {% if item.is_available %}
+        <div class="food-card">
+          {% if item.Food_image %}
+            <img src="{{ item.Food_image.url }}" class="food-img" alt="{{ item.name }}">
+          {% else %}
+            <div class="food-img-placeholder">🍛</div>
+          {% endif %}
+
+          <div class="food-body">
+            <div class="food-name" title="{{ item.name }}">{{ item.name }}</div>
+            <div class="food-price">₹{{ item.price }}</div>
+            <div class="food-actions">
+              <a href="{% url 'buy_item' item.id %}" class="btn-buy">⚡ Buy</a>
+              <a href="{% url 'add_to_cart' item.id %}" class="btn-cart">🛒 Cart</a>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      {% empty %}
+        <p class="empty-food">No dishes available right now.</p>
+      {% endfor %}
+    </div>
+
+  </div>
+  {% empty %}
+  <div class="empty-page">
+    <div class="empty-icon">🍽️</div>
+    <p>No restaurants found near you.</p>
+  </div>
+  {% endfor %}
+
+</div>
+
+<script>
+  // Live search filter
+  document.getElementById('searchInput').addEventListener('input', function () {
+    const q = this.value.toLowerCase();
+    document.querySelectorAll('.restaurant-block').forEach(block => {
+      const name = block.dataset.restaurant || '';
+      block.style.display = name.includes(q) ? '' : 'none';
+    });
+  });
+
+  // Category tab active state
+  document.querySelectorAll('.cat-tabs').forEach(tabGroup => {
+    tabGroup.querySelectorAll('.cat-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        tabGroup.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+  });
+</script>
+
+{% endblock %}

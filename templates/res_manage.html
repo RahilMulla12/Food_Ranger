@@ -1,0 +1,543 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{{ restaurant.name }} — Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0f0e0c;
+      --surface:   #1a1814;
+      --card:      #221f1a;
+      --border:    #2e2a23;
+      --gold:      #d4a847;
+      --gold-dim:  #8a6b28;
+      --text:      #f0ead8;
+      --muted:     #7a7060;
+      --green:     #4caf7d;
+      --red:       #e05c5c;
+      --amber:     #f0a030;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ── TOP BAR ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.25rem 2.5rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+    }
+
+    .brand-icon {
+      width: 36px; height: 36px;
+      background: var(--gold);
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      font-size: 1.1rem;
+    }
+
+    .brand-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem;
+      color: var(--gold);
+      letter-spacing: .02em;
+    }
+
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .35rem .9rem;
+      border-radius: 999px;
+      font-size: .8rem;
+      font-weight: 500;
+      border: 1px solid;
+      cursor: pointer;
+      transition: opacity .2s;
+    }
+    .status-pill.open   { color: var(--green); border-color: var(--green); background: rgba(76,175,125,.08); }
+    .status-pill.closed { color: var(--red);   border-color: var(--red);   background: rgba(224,92,92,.08); }
+    .status-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+    /* ── LAYOUT ── */
+    .page { padding: 2.5rem; max-width: 1280px; margin: 0 auto; }
+
+    .page-header {
+      margin-bottom: 2.5rem;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .page-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.4rem;
+      font-weight: 900;
+      line-height: 1.1;
+    }
+
+    .page-title span { color: var(--gold); }
+
+    .page-subtitle {
+      margin-top: .35rem;
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    /* ── STATS GRID ── */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.4rem 1.6rem;
+      position: relative;
+      overflow: hidden;
+      transition: border-color .25s, transform .2s;
+    }
+
+    .stat-card:hover { border-color: var(--gold-dim); transform: translateY(-2px); }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 3px; height: 100%;
+      background: var(--accent, var(--gold));
+      border-radius: 3px 0 0 3px;
+    }
+
+    .stat-label { font-size: .75rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: .5rem; }
+    .stat-value { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; }
+    .stat-sub   { font-size: .78rem; color: var(--muted); margin-top: .25rem; }
+
+    /* ── SECTION HEADER ── */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+    }
+
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem;
+    }
+
+    /* ── BUTTON ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .65rem 1.3rem;
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .875rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: filter .2s, transform .15s;
+      text-decoration: none;
+    }
+
+    .btn:hover  { filter: brightness(1.12); transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+
+    .btn-gold {
+      background: var(--gold);
+      color: #0f0e0c;
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    /* ── DISH GRID ── */
+    .dishes {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .dish-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      transition: border-color .25s, transform .2s;
+    }
+
+    .dish-card:hover { border-color: var(--gold-dim); transform: translateY(-3px); }
+
+    .dish-img {
+      width: 100%; height: 150px;
+      background: var(--border);
+      display: grid;
+      place-items: center;
+      font-size: 2.5rem;
+      color: var(--muted);
+    }
+
+    .dish-body { padding: 1rem 1.2rem 1.2rem; }
+
+    .dish-name { font-weight: 600; font-size: 1rem; margin-bottom: .3rem; }
+
+    .dish-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: .6rem;
+    }
+
+    .dish-price { color: var(--gold); font-weight: 700; font-size: 1rem; }
+
+    .dish-avail {
+      font-size: .72rem;
+      padding: .2rem .6rem;
+      border-radius: 999px;
+    }
+
+    .dish-avail.yes { background: rgba(76,175,125,.15); color: var(--green); }
+    .dish-avail.no  { background: rgba(224,92,92,.12);  color: var(--red); }
+
+    /* ── ADD DISH CARD ── */
+    .dish-add {
+      background: transparent;
+      border: 2px dashed var(--border);
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: .75rem;
+      min-height: 230px;
+      cursor: pointer;
+      transition: border-color .25s, background .25s;
+      text-decoration: none;
+      color: var(--muted);
+    }
+
+    .dish-add:hover {
+      border-color: var(--gold);
+      background: rgba(212,168,71,.04);
+      color: var(--gold);
+    }
+
+    .dish-add .plus {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      border: 2px solid currentColor;
+      display: grid;
+      place-items: center;
+      font-size: 1.5rem;
+      transition: transform .2s;
+    }
+
+    .dish-add:hover .plus { transform: rotate(90deg); }
+    .dish-add span { font-size: .875rem; font-weight: 500; }
+
+    /* ── ORDERS TABLE ── */
+    .orders-wrap {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    table { width: 100%; border-collapse: collapse; }
+
+    thead tr { background: rgba(255,255,255,.03); }
+
+    th {
+      padding: .9rem 1.2rem;
+      text-align: left;
+      font-size: .72rem;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--muted);
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: .95rem 1.2rem;
+      font-size: .875rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,.02); }
+
+    .badge {
+      display: inline-block;
+      padding: .25rem .7rem;
+      border-radius: 999px;
+      font-size: .72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .badge-placed     { background: rgba(120,120,200,.15); color: #9090e0; }
+    .badge-accepted   { background: rgba(76,175,125,.15);  color: var(--green); }
+    .badge-preparing  { background: rgba(240,160,48,.15);  color: var(--amber); }
+    .badge-out        { background: rgba(100,180,240,.15); color: #64b4f0; }
+    .badge-delivered  { background: rgba(76,175,125,.25);  color: var(--green); }
+    .badge-canceled   { background: rgba(224,92,92,.15);   color: var(--red); }
+
+    .empty {
+      text-align: center;
+      padding: 3rem;
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    /* ── RESTAURANT INFO EDIT ── */
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .info-item label {
+      display: block;
+      font-size: .72rem;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--muted);
+      margin-bottom: .35rem;
+    }
+
+    .info-item p { font-size: .95rem; font-weight: 500; }
+
+    @media (max-width: 640px) {
+      .page { padding: 1.25rem; }
+      .info-grid { grid-template-columns: 1fr; }
+      .page-header { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header>
+  <div class="brand">
+    <div class="brand-icon">🍽</div>
+    <span class="brand-name">FoodRanger</span>
+  </div>
+
+  {% if restaurant.is_open %}
+    <div class="status-pill open">
+      <span class="dot"></span> Open for Orders
+    </div>
+  {% else %}
+    <div class="status-pill closed">
+      <span class="dot"></span> Closed
+    </div>
+  {% endif %}
+</header>
+
+<!-- ── MAIN ── -->
+<main class="page">
+
+  <!-- Page Title -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">
+        {% if restaurant.name %}
+          {{ restaurant.name }}
+        {% else %}
+          <span>Your Restaurant</span>
+        {% endif %}
+      </h1>
+      <p class="page-subtitle">{{ restaurant.address|default:"No address set" }}</p>
+    </div>
+    <a href="" class="btn btn-outline">✏️ Edit Info</a>
+  </div>
+
+  <!-- Restaurant Info -->
+  <div class="info-grid">
+    <div class="info-item">
+      <label>Owner</label>
+      <p>{{ restaurant.owner.get_full_name|default:restaurant.owner.username }}</p>
+    </div>
+    <div class="info-item">
+      <label>Status</label>
+      <p>{% if restaurant.is_open %}🟢 Open{% else %}🔴 Closed{% endif %}</p>
+    </div>
+    <div class="info-item">
+      <label>Address</label>
+      <p>{{ restaurant.address|default:"—" }}</p>
+    </div>
+    <div class="info-item">
+      <label>Total Dishes</label>
+      <p>{{ food_items|length }} item{{ food_items|length|pluralize }}</p>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat-card" style="--accent: var(--gold)">
+      <div class="stat-label">Total Sales</div>
+      <div class="stat-value">₹{{ total_sales|floatformat:0 }}</div>
+      <div class="stat-sub">All time delivered</div>
+    </div>
+    <div class="stat-card" style="--accent: var(--green)">
+      <div class="stat-label">Today's Sales</div>
+      <div class="stat-value">₹{{ today_sales|floatformat:0 }}</div>
+      <div class="stat-sub">Delivered today</div>
+    </div>
+    <div class="stat-card" style="--accent: var(--amber)">
+      <div class="stat-label">Active Orders</div>
+      <div class="stat-value">{{ accepted_orders }}</div>
+      <div class="stat-sub">Accepted / Preparing / Out</div>
+    </div>
+    <div class="stat-card" style="--accent: var(--green)">
+      <div class="stat-label">Delivered Today</div>
+      <div class="stat-value">{{ delivered_today }}</div>
+      <div class="stat-sub">Completed orders</div>
+    </div>
+    <div class="stat-card" style="--accent: var(--red)">
+      <div class="stat-label">Canceled</div>
+      <div class="stat-value">{{ rejected_orders }}</div>
+      <div class="stat-sub">All time canceled</div>
+    </div>
+  </div>
+
+  <!-- Menu / Dishes -->
+  <div class="section-header">
+    <h2 class="section-title">Menu</h2>
+    <a href="{% url 'new_dishes' %}" class="btn btn-gold">
+      + Add New Dish
+    </a>
+  </div>
+
+  <div class="dishes">
+    {% for item in food_items %}
+    <div class="dish-card">
+      <!-- Use Food_image if uploaded, else show emoji placeholder -->
+      {% if item.Food_image %}
+        <img src="{{ item.Food_image.url }}" alt="{{ item.name }}"
+             style="width:100%;height:150px;object-fit:cover;">
+      {% else %}
+        <div class="dish-img">🍛</div>
+      {% endif %}
+      <div class="dish-body">
+        <div class="dish-name">{{ item.name }}</div>
+        <div style="font-size:.78rem;color:var(--muted)">{{ item.restaurant.name }}</div>
+        <div class="dish-meta">
+          <span class="dish-price">₹{{ item.price }}</span>
+          {% if item.is_available %}
+            <span class="dish-avail yes">Available</span>
+          {% else %}
+            <span class="dish-avail no">Unavailable</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <!-- shown when no dishes exist — the Add card below handles this -->
+    {% endfor %}
+
+    <!-- Add New Dish card -->
+    <a href="{% url 'new_dishes'%}" class="dish-add">
+      <div class="plus">+</div>
+      <span>Add New Dish</span>
+    </a>
+  </div>
+
+  <!-- Recent Orders -->
+  <div class="section-header">
+    <h2 class="section-title">Recent Orders</h2>
+    <a href="" class="btn btn-outline">View All</a>
+  </div>
+
+  <div class="orders-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Customer</th>
+          <th>Item</th>
+          <th>Qty</th>
+          <th>Total</th>
+          <th>Status</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in recent_orders %}
+        <tr>
+          <td style="color:var(--muted)">{{ order.id }}</td>
+          <td>{{ order.customer.get_full_name|default:order.customer.username }}</td>
+          <td>{{ order.food.name }}</td>
+          <td>{{ order.quantity }}</td>
+          <td>₹{{ order.total_price|floatformat:0 }}</td>
+          <td>
+            {% if order.status == 'PLACED' %}
+              <span class="badge badge-placed">Placed</span>
+            {% elif order.status == 'ACCEPTED' %}
+              <span class="badge badge-accepted">Accepted</span>
+            {% elif order.status == 'PREPARING' %}
+              <span class="badge badge-preparing">Preparing</span>
+            {% elif order.status == 'OUT_OF_DELIVERY' %}
+              <span class="badge badge-out">Out for Delivery</span>
+            {% elif order.status == 'DELIVERED' %}
+              <span class="badge badge-delivered">Delivered</span>
+            {% elif order.status == 'CANCELED' %}
+              <span class="badge badge-canceled">Canceled</span>
+            {% endif %}
+          </td>
+          <td style="color:var(--muted)">{{ order.created_at|date:"d M, H:i" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" class="empty">No orders yet.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</main>
+</body>
+</html>

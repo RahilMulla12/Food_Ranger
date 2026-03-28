@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="row">
+
+    <!-- Food Image -->
+    <div class="col-md-5">
+      {% if food.image %}
+        <img src="{{ food.Food_image.url }}" class="img-fluid rounded">
+      {% else %}
+        <img src="{{food.Food_image.url }}" class="img-fluid rounded">
+      {% endif %}
+    </div>
+
+    <!-- Food Details + Order Summary -->
+    <div class="col-md-7">
+      <h2>{{ food.name }}</h2>
+
+      <p class="text-muted">
+        <strong>Restaurant:</strong> {{ food.restaurant.name }}
+      </p>
+
+      <p>{{ food.description }}</p>
+
+      <h4 class="text-success">₹{{ food.price }}</h4>
+
+      <form method="POST">
+        {% csrf_token %}
+
+        <label>Quantity:</label>
+        <input type="number" name="quantity" value="1" min="1"
+               class="form-control w-25 mb-3">
+
+        <button type="submit" class="btn btn-danger btn-lg">
+          Confirm Order
+        </button>
+      </form>
+
+      <hr>
+
+      <h5>Order Summary</h5>
+      <ul>
+        <li><strong>Item:</strong> {{ food.name }}</li>
+        <li><strong>Price per item:</strong> ₹{{ food.price }}</li>
+        <li><strong>Delivery:</strong> Free</li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

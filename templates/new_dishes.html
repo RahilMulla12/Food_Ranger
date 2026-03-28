@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  :root {
+    --bg:       #0f0e0c;
+    --surface:  #1a1814;
+    --card:     #221f1a;
+    --border:   #2e2a23;
+    --gold:     #d4a847;
+    --gold-dim: #8a6b28;
+    --text:     #f0ead8;
+    --muted:    #7a7060;
+    --green:    #4caf7d;
+    --red:      #e05c5c;
+  }
+
+  body { background: var(--bg) !important; color: var(--text) !important; }
+
+  /* ── cards ── */
+  .dk-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    margin-bottom: 1.5rem;
+  }
+  .dk-card:hover { border-color: var(--gold-dim); }
+  .dk-card-body { padding: 1.5rem; }
+
+  .dk-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 1.25rem;
+  }
+
+  /* ── page header ── */
+  .dk-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.75rem;
+  }
+  .dk-page-header h4 { font-weight: 700; color: var(--text); margin: 0; }
+  .dk-page-header small { color: var(--muted); }
+
+  /* ── form controls ── */
+  .dk-label {
+    display: block;
+    font-size: .78rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--muted);
+    margin-bottom: .4rem;
+  }
+
+  .dk-input, .dk-select {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: .55rem .85rem;
+    font-size: .9rem;
+    transition: border-color .2s;
+    outline: none;
+  }
+  .dk-input:focus, .dk-select:focus { border-color: var(--gold); }
+  .dk-input::placeholder { color: var(--muted); }
+  .dk-select option { background: var(--card); }
+
+  /* ── buttons ── */
+  .btn-dk-gold {
+    background: var(--gold);
+    color: #0f0e0c;
+    border: none;
+    border-radius: 8px;
+    padding: .55rem 1.3rem;
+    font-weight: 600;
+    font-size: .875rem;
+    cursor: pointer;
+    transition: filter .2s, transform .15s;
+  }
+  .btn-dk-gold:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+  .btn-dk-outline {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: .45rem 1rem;
+    font-size: .825rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: border-color .2s;
+  }
+  .btn-dk-outline:hover { border-color: var(--gold-dim); color: var(--text); }
+
+  .btn-dk-primary {
+    background: transparent;
+    border: 1px solid #4a80c4;
+    color: #7aaef0;
+    border-radius: 6px;
+    padding: .3rem .8rem;
+    font-size: .8rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background .2s;
+  }
+  .btn-dk-primary:hover { background: rgba(74,128,196,.15); color: #7aaef0; }
+
+  .btn-dk-danger {
+    background: transparent;
+    border: 1px solid var(--red);
+    color: var(--red);
+    border-radius: 6px;
+    padding: .3rem .8rem;
+    font-size: .8rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background .2s;
+  }
+  .btn-dk-danger:hover { background: rgba(224,92,92,.12); color: var(--red); }
+
+  /* ── dish cards ── */
+  .dish-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    transition: border-color .25s, transform .2s;
+    height: 100%;
+  }
+  .dish-card:hover { border-color: var(--gold-dim); transform: translateY(-3px); }
+
+  .dish-img-placeholder {
+    width: 100%; height: 180px;
+    background: var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+  }
+
+  .dish-body { padding: 1rem 1.2rem 1.2rem; }
+  .dish-name { font-weight: 600; font-size: 1rem; color: var(--text); margin-bottom: .25rem; }
+  .dish-price { color: var(--gold); font-weight: 700; font-size: 1rem; margin-bottom: .5rem; }
+
+  .badge-avail {
+    display: inline-block;
+    padding: .2rem .65rem;
+    border-radius: 999px;
+    font-size: .72rem;
+    font-weight: 600;
+  }
+  .badge-avail.yes { background: rgba(76,175,125,.15); color: var(--green); }
+  .badge-avail.no  { background: rgba(224,92,92,.12);  color: var(--red); }
+
+  .dish-actions { display: flex; justify-content: space-between; margin-top: .85rem; }
+
+  .empty-msg { color: var(--muted); font-size: .9rem; padding: 1rem 0; }
+
+  /* ── grid spacing ── */
+  .mb-dk { margin-bottom: 1.25rem; }
+  .row-dk { display: flex; flex-wrap: wrap; gap: 1.25rem; }
+  .col-dk { flex: 1 1 240px; }
+</style>
+
+<!-- ── PAGE HEADER ── -->
+<div class="dk-page-header">
+  <div>
+    <h4>Menu Management</h4>
+    <small>{{ restaurant.name }}</small>
+  </div>
+  <a href="{% url 'res_manage' %}" class="btn-dk-outline">← Back to Dashboard</a>
+</div>
+
+<!-- ── ADD DISH FORM ── -->
+<div class="dk-card">
+  <div class="dk-card-body">
+    <div class="dk-title">Add New Dish</div>
+
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <div class="row" style="--bs-gutter-x:1rem;">
+        <div class="col-md-6 mb-dk">
+          <label class="dk-label">Dish Name</label>
+          <input type="text" name="name" class="dk-input" placeholder="e.g. Chicken Biryani" required>
+        </div>
+        <div class="col-md-3 mb-dk">
+          <label class="dk-label">Price (₹)</label>
+          <input type="number" name="price" class="dk-input" placeholder="0" min="0" required>
+        </div>
+        <div class="col-md-3 mb-dk">
+          <label class="dk-label">Available</label>
+          <select name="is_available" class="dk-select">
+            <option value="True">Yes</option>
+            <option value="False">No</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="mb-dk">
+        <label class="dk-label">Dish Image</label>
+        <input type="file" name="Food_image" class="dk-input" accept="image/*" style="padding:.45rem .85rem;">
+      </div>
+
+      <button type="submit" name="add_dish" class="btn-dk-gold">+ Add Dish</button>
+    </form>
+  </div>
+</div>
+
+<!-- ── DISH LIST ── -->
+<div class="dk-card">
+  <div class="dk-card-body">
+    <div class="dk-title">Your Menu</div>
+
+    <div class="row" style="--bs-gutter-x:1.25rem;">
+      {% for item in food_items %}
+      <div class="col-md-4 mb-4">
+        <div class="dish-card">
+          {% if item.Food_image %}
+            <img src="{{ item.Food_image.url }}" alt="{{ item.name }}"
+                 style="width:100%;height:180px;object-fit:cover;">
+          {% else %}
+            <div class="dish-img-placeholder">🍛</div>
+          {% endif %}
+
+          <div class="dish-body">
+            <div class="dish-name">{{ item.name }}</div>
+            <div class="dish-price">₹{{ item.price }}</div>
+
+            {% if item.is_available %}
+              <span class="badge-avail yes">Available</span>
+            {% else %}
+              <span class="badge-avail no">Unavailable</span>
+            {% endif %}
+
+            <div class="dish-actions">
+              <a href="" class="btn-dk-primary">Edit</a>
+              <a href="" class="btn-dk-danger">Delete</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="col-12">
+        <p class="empty-msg">No dishes added yet.</p>
+      </div>
+      {% endfor %}
+    </div>
+
+  </div>
+</div>
+
+{% endblock content %}

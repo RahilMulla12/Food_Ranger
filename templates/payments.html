@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<div class="container my-5">
+
+    <div class="row">
+
+        <!-- LEFT SIDE : DELIVERY DETAILS -->
+        <div class="col-md-7">
+
+            <div class="card shadow-lg border-0 rounded-4 p-4">
+
+                <h3 class="fw-bold mb-4 text-center">
+                    🛵 Delivery Details
+                </h3>
+
+                <form method="POST">
+                {% csrf_token %}
+
+                <label class="fw-semibold">Full Name</label>
+                <input type="text" name="name" class="form-control mb-3" required>
+
+                <label class="fw-semibold">Phone Number</label>
+                <input type="text" name="phone" class="form-control mb-3" required>
+
+                <label class="fw-semibold">Delivery Address</label>
+                <textarea name="address" class="form-control mb-3" rows="3" required></textarea>
+
+                <!-- Hidden Latitude Longitude -->
+                <input type="hidden" name="latitude" id="latitude">
+                <input type="hidden" name="longitude" id="longitude">
+
+                <!-- Current Location Button -->
+                <button type="button"
+                        onclick="getLocation()"
+                        class="btn btn-outline-dark mb-3 w-100">
+
+                        📍 Use Current Location
+                </button>
+
+                <p id="locationStatus" class="text-success small"></p>
+
+            </div>
+
+        </div>
+
+        <!-- RIGHT SIDE : PAYMENT -->
+        <div class="col-md-5">
+
+            <div class="card shadow-lg border-0 rounded-4 p-4">
+
+                <h3 class="fw-bold text-center mb-4">
+                    💳 Payment Method
+                </h3>
+
+                <!-- PAYMENT OPTIONS -->
+
+                <div class="payment-option mb-3">
+                    <input type="radio" name="payment" value="upi" onclick="showUPI()" required>
+                    <img src="food_images/pngwing.com.png"
+                         height="30">
+                    UPI Payment
+                </div>
+
+                <div class="payment-option mb-3">
+                    <input type="radio" name="payment" value="card" onclick="showCard()">
+                    💳 Credit / Debit Card
+                </div>
+
+                <div class="payment-option mb-3">
+                    <input type="radio" name="payment" value="cod">
+                    💵 Cash on Delivery
+                </div>
+
+                <hr>
+
+                <!-- UPI SECTION -->
+                <div id="upiSection" style="display:none">
+
+                    <label>UPI ID</label>
+                    <input type="text" class="form-control mb-3"
+                           placeholder="example@upi">
+
+                </div>
+
+                <!-- CARD SECTION -->
+                <div id="cardSection" style="display:none">
+
+                    <label>Card Number</label>
+                    <input type="text" class="form-control mb-2"
+                           placeholder="XXXX XXXX XXXX XXXX">
+
+                    <label>Card Holder</label>
+                    <input type="text" class="form-control mb-2"
+                           placeholder="Name on Card">
+
+                    <div class="row">
+
+                        <div class="col-6">
+                            <label>Expiry</label>
+                            <input type="text"
+                                   class="form-control"
+                                   placeholder="MM/YY">
+                        </div>
+
+                        <div class="col-6">
+                            <label>CVV</label>
+                            <input type="password"
+                                   class="form-control"
+                                   placeholder="***">
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <hr>
+
+                <!-- TOTAL -->
+                <h5 class="text-center mt-3">
+                    Total Amount : ₹ {{ total }}
+                </h5>
+
+                <button class="btn btn-dark w-100 mt-4 rounded-pill">
+                    🚀 Place Order
+                </button>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- CSS -->
+<style>
+
+.payment-option{
+    padding:10px;
+    border:1px solid #eee;
+    border-radius:10px;
+    cursor:pointer;
+}
+
+.payment-option:hover{
+    background:#f8f9fa;
+}
+
+</style>
+
+<!-- JAVASCRIPT -->
+<script>
+
+function showUPI(){
+
+    document.getElementById("upiSection").style.display="block";
+    document.getElementById("cardSection").style.display="none";
+
+}
+
+function showCard(){
+
+    document.getElementById("cardSection").style.display="block";
+    document.getElementById("upiSection").style.display="none";
+
+}
+
+/* CURRENT LOCATION */
+
+function getLocation(){
+
+    if(navigator.geolocation){
+
+        navigator.geolocation.getCurrentPosition(showPosition, showError);
+
+    }else{
+
+        alert("Geolocation not supported");
+
+    }
+
+}
+
+function showPosition(position){
+
+    let lat = position.coords.latitude;
+    let lon = position.coords.longitude;
+
+    document.getElementById("latitude").value = lat;
+    document.getElementById("longitude").value = lon;
+
+    document.getElementById("locationStatus").innerHTML =
+    "✔ Location detected (Lat: "+lat+" , Lon: "+lon+")";
+
+}
+
+function showError(error){
+
+    if(error.code == 1){
+        alert("Location permission denied");
+    }
+    else{
+        alert("Unable to get location");
+    }
+
+}
+
+</script>
+
+{% endblock %}
